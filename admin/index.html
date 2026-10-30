@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoSafe GIS &bull; Administrative Command Center</title>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Admin Stylesheet -->
+  <link rel="stylesheet" href="/admin/css/admin.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Collapsible Dark Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">🌐</div>
+        <div class="sidebar-brand-text">
+          <h2>GeoSafe GIS</h2>
+          <span>ADMIN DASHBOARD</span>
+        </div>
+      </div>
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Toggle Sidebar">◀</button>
+    </div>
+
+    <ul class="sidebar-menu">
+      <div class="sidebar-section-title">Core Operations</div>
+      <li>
+        <button class="sidebar-nav-item active" data-module="dashboard">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="services">
+          <span class="nav-icon">🏥</span>
+          <span class="nav-text">Service Facilities</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="riskzones">
+          <span class="nav-icon">🗺️</span>
+          <span class="nav-text">Risk-Zone Layers</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="incidents">
+          <span class="nav-icon">🚨</span>
+          <span class="nav-text">Citizen Incidents</span>
+        </button>
+      </li>
+
+      <div class="sidebar-section-title">Administration</div>
+      <li>
+        <button class="sidebar-nav-item" data-module="users">
+          <span class="nav-icon">👥</span>
+          <span class="nav-text">User Management</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="layers">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-text">Map &amp; Layer Config</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="analytics">
+          <span class="nav-icon">📈</span>
+          <span class="nav-text">Reports &amp; Data</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="audit">
+          <span class="nav-icon">🛡️</span>
+          <span class="nav-text">Audit Trail</span>
+        </button>
+      </li>
+      <li>
+        <button class="sidebar-nav-item" data-module="settings">
+          <span class="nav-icon">🔧</span>
+          <span class="nav-text">System Settings</span>
+        </button>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <a href="/" target="_blank" rel="noopener noreferrer" class="public-portal-link">
+        <span>↗</span>
+        <span class="nav-text">Open Public Portal</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Main Dashboard Area -->
+  <main class="admin-main">
+    <!-- Topbar -->
+    <header class="admin-topbar">
+      <div class="topbar-left">
+        <div class="topbar-breadcrumbs">
+          Admin / <span class="active" id="currentModuleBreadcrumb">Dashboard Overview</span>
+        </div>
+        <div class="system-status-indicator">
+          <span class="status-dot"></span>
+          <span>SYSTEM ONLINE</span>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="user-profile-menu">
+          <div class="user-avatar" id="adminUserAvatar">A</div>
+          <div>
+            <div class="user-meta-name" id="adminUserName">Administrator</div>
+            <span class="role-badge" id="adminUserRole">Super Admin</span>
+          </div>
+        </div>
+
+        <button class="btn-logout" id="btnLogout">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Module Views Container -->
+    <div class="admin-content">
+
+      <!-- ===================================================================
+           MODULE A: DASHBOARD
+           =================================================================== -->
+      <section class="admin-module-view" id="module_dashboard">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Command Dashboard Overview</h2>
+            <p>Live status of mapped facilities, active incident reports, risk zones, and recent audits.</p>
+          </div>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-card-top">
+              <span class="metric-label">Total Facilities</span>
+              <div class="metric-icon" style="background:rgba(37,99,235,0.15); color:#60a5fa;">🏥</div>
+            </div>
+            <div class="metric-val" id="mTotalServices">--</div>
+            <div class="metric-sub" id="mVerifiedServices">-- Verified</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-card-top">
+              <span class="metric-label">Active Incidents</span>
+              <div class="metric-icon" style="background:rgba(239,68,68,0.15); color:#f87171;">🚨</div>
+            </div>
+            <div class="metric-val" id="mActiveIncidents" style="color:#f87171;">--</div>
+            <div class="metric-sub" id="mTotalIncidents">-- Total Logged</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-card-top">
+              <span class="metric-label">Published Risk Zones</span>
+              <div class="metric-icon" style="background:rgba(245,158,11,0.15); color:#fbbf24;">🌊</div>
+            </div>
+            <div class="metric-val" id="mRiskZones">--</div>
+            <div class="metric-sub" id="mRiskDrafts">-- Drafts</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-card-top">
+              <span class="metric-label">Telemetry Sync</span>
+              <div class="metric-icon" style="background:rgba(16,185,129,0.15); color:#34d399;">⏱️</div>
+            </div>
+            <div class="metric-val" id="mDataFreshness" style="font-size:1.4rem;">--:--:--</div>
+            <div class="metric-sub">Database Synchronized</div>
+          </div>
+        </div>
+
+        <!-- Interactive Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h4>Essential Services by Category</h4>
+            <div class="chart-container">
+              <canvas id="chartCategories"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h4>Incident Reports by Current Status</h4>
+            <div class="chart-container">
+              <canvas id="chartIncidents"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Feed -->
+        <div class="table-card" style="padding:22px;">
+          <h4 style="font-size:0.96rem; font-weight:700; color:#fff; margin-bottom:14px;">Recent Administrative Activity</h4>
+          <div id="recentActivityStream">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE B: SERVICE FACILITIES MANAGEMENT
+           =================================================================== -->
+      <section class="admin-module-view" id="module_services" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Essential Service Facilities Directory</h2>
+            <p>Manage, add, update, verify, and export hospitals, clinics, shelters, and water kiosks.</p>
+          </div>
+          <div class="module-actions">
+            <button class="btn btn-primary btn-add-action" onclick="window.adminOpenAddService()">
+              <span>➕</span> Add New Facility
+            </button>
+            <a href="/api/services/export-csv" class="btn btn-secondary">
+              <span>📥</span> Export CSV
+            </a>
+            <button class="btn btn-secondary btn-add-action" onclick="document.getElementById('csvImportModal').classList.add('open')">
+              <span>📤</span> Import CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="table-toolbar-left">
+              <input type="text" id="serviceSearchInput" class="search-input" placeholder="Search facilities by name, locality, address...">
+              <select id="serviceCategoryFilter" class="filter-select">
+                <option value="all">All Categories</option>
+                <option value="hospital">Hospitals</option>
+                <option value="pharmacy">Pharmacies</option>
+                <option value="shelter">Shelters</option>
+                <option value="food">Food Supplies</option>
+                <option value="water">Water Points</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Facility Name &amp; Locality</th>
+                  <th>Category</th>
+                  <th>Coordinates</th>
+                  <th>Contact</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="servicesTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-pagination">
+            <span id="servicesPageIndicator">Page 1 of 1</span>
+            <div class="page-btn-group">
+              <button class="btn btn-secondary btn-sm" id="servicesPrevBtn">&larr; Prev</button>
+              <button class="btn btn-secondary btn-sm" id="servicesNextBtn">Next &rarr;</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE C: RISK-ZONE MANAGEMENT
+           =================================================================== -->
+      <section class="admin-module-view" id="module_riskzones" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Multi-Hazard Risk Zones &amp; Polygons</h2>
+            <p>Author and publish flood inundation sectors, vector clusters, and composite risk buffers.</p>
+          </div>
+          <div class="module-actions">
+            <button class="btn btn-primary btn-add-action" onclick="window.adminOpenAddRiskZone()">
+              <span>➕</span> Create Risk Zone
+            </button>
+            <a href="/api/risk-zones/export-geojson" class="btn btn-secondary">
+              <span>🗺️</span> Export GeoJSON
+            </a>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Zone Name &amp; Description</th>
+                  <th>Hazard Type</th>
+                  <th>Level &amp; Score</th>
+                  <th>Geometry</th>
+                  <th>State</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="riskZonesTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE D: INCIDENT MODERATION
+           =================================================================== -->
+      <section class="admin-module-view" id="module_incidents" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Citizen Emergency Incidents Moderation</h2>
+            <p>Review community-submitted flood, roadway blockage, and infrastructure hazard reports.</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-toolbar">
+            <div class="table-toolbar-left">
+              <select id="incidentStatusFilter" class="filter-select">
+                <option value="all">All Moderation Statuses</option>
+                <option value="Pending">Pending Review</option>
+                <option value="Under Review">Under Active Review</option>
+                <option value="Verified">Verified &amp; Actioned</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Ref ID</th>
+                  <th>Title &amp; Address</th>
+                  <th>Category</th>
+                  <th>Status</th>
+                  <th>Reporter (Private)</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="incidentsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-pagination">
+            <span id="incidentsPageIndicator">Page 1 of 1</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE E: USER MANAGEMENT & RBAC
+           =================================================================== -->
+      <section class="admin-module-view" id="module_users" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Administrative Accounts &amp; RBAC Roles</h2>
+            <p>Manage system operators, analysts, data managers, and role permissions.</p>
+          </div>
+          <div class="module-actions">
+            <button class="btn btn-primary" onclick="window.adminOpenAddUser()">
+              <span>➕</span> Add Administrative User
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>User Details</th>
+                  <th>Assigned Role</th>
+                  <th>Status</th>
+                  <th>Last Authentication</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE F: MAP & LAYER SETTINGS
+           =================================================================== -->
+      <section class="admin-module-view" id="module_layers" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Cartography &amp; Tile Provider Settings</h2>
+            <p>Configure default coordinates, zoom bounds, and approved tile sources.</p>
+          </div>
+        </div>
+
+        <div class="table-card" style="padding:28px; max-width:700px;">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Default Center Latitude</label>
+              <input type="text" id="setting_map_default_lat" value="17.3850">
+            </div>
+            <div class="form-group">
+              <label>Default Center Longitude</label>
+              <input type="text" id="setting_map_default_lng" value="78.4867">
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Default Zoom Level</label>
+              <input type="number" id="setting_map_default_zoom" value="12" min="1" max="19">
+            </div>
+            <div class="form-group">
+              <label>Default Basemap Tile Source</label>
+              <select id="setting_map_default_tile">
+                <option value="osm">OpenStreetMap Standard</option>
+                <option value="satellite">Esri World Imagery (Satellite)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Available Radius Search Choices (km, comma-separated)</label>
+            <input type="text" id="setting_search_radii" value="1,3,5,10,20">
+          </div>
+          <p style="color:#64748b; font-size:0.8rem; margin-top:10px;">Tile providers adhere to standard OpenStreetMap ODbL and Esri Community mapping policies.</p>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE G: REPORTS & ANALYTICS
+           =================================================================== -->
+      <section class="admin-module-view" id="module_analytics" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Database Metrics &amp; Operational Reports</h2>
+            <p>Calculated statistics directly from persistent SQL tables.</p>
+          </div>
+          <div class="module-actions">
+            <a href="/api/services/export-csv" class="btn btn-secondary">
+              <span>📥</span> Download Full Dataset (CSV)
+            </a>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Mapped Services</div>
+            <div class="metric-val" id="repTotalServices">--</div>
+            <div class="metric-sub">Stored in SQL Database</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Total Reports</div>
+            <div class="metric-val" id="repTotalIncidents">--</div>
+            <div class="metric-sub">Citizen Incident Logs</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Hazard Polygons</div>
+            <div class="metric-val" id="repTotalRiskZones">--</div>
+            <div class="metric-sub">Active Risk Zones</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Verification Ratio</div>
+            <div class="metric-val" id="repVerifiedPct" style="color:#34d399;">--</div>
+            <div class="metric-sub">Verified / Total Facilities</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE H: AUDIT TRAIL
+           =================================================================== -->
+      <section class="admin-module-view" id="module_audit" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>Immutable Security Audit Trail</h2>
+            <p>Chronological record of logins, facility modifications, status transitions, and setting changes.</p>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Actor</th>
+                  <th>Action</th>
+                  <th>Target Entity</th>
+                  <th>Details</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="table-pagination">
+            <span id="auditPageIndicator">Page 1 of 1</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================
+           MODULE I: SYSTEM SETTINGS
+           =================================================================== -->
+      <section class="admin-module-view" id="module_settings" style="display:none;">
+        <div class="module-header">
+          <div class="module-title">
+            <h2>System &amp; Disaster Advisory Settings</h2>
+            <p>Configure public platform branding, national hotline numbers, and top banner advisories.</p>
+          </div>
+        </div>
+
+        <div class="table-card" style="padding:28px; max-width:760px;">
+          <form id="systemSettingsForm">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="setting_site_name">Website Name</label>
+                <input type="text" id="setting_site_name" value="GeoSafe GIS" required>
+              </div>
+              <div class="form-group">
+                <label for="setting_site_subtitle">Website Subtitle</label>
+                <input type="text" id="setting_site_subtitle" value="Flood, Health and Community Emergency Support" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="setting_contact_email">Administrative Contact Email</label>
+              <input type="email" id="setting_contact_email" value="emergency-support@geosafe.local" required>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label for="setting_emergency_phone_national">National Emergency Hotline</label>
+                <input type="text" id="setting_emergency_phone_national" value="112" required>
+              </div>
+              <div class="form-group">
+                <label for="setting_emergency_phone_disaster">Disaster Management Helpline</label>
+                <input type="text" id="setting_emergency_phone_disaster" value="1078" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="setting_emergency_phone_ambulance">Emergency Medical / Trauma Ambulance</label>
+              <input type="text" id="setting_emergency_phone_ambulance" value="108" required>
+            </div>
+
+            <div class="form-group">
+              <label for="setting_emergency_banner_text">Live Public Advisory Banner Text</label>
+              <textarea id="setting_emergency_banner_text" rows="2" required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="padding:10px 24px;">
+              Save System Settings
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ===================================================================
+       ADMIN MODALS
+       =================================================================== -->
+
+  <!-- Add/Edit Service Modal -->
+  <div class="admin-modal-backdrop" id="serviceModal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h3 id="serviceModalTitle">Add New Essential Service Facility</h3>
+        <button class="modal-close" onclick="window.closeAdminModal('serviceModal')">✕</button>
+      </div>
+      <form id="serviceForm">
+        <div class="modal-body">
+          <input type="hidden" id="serviceModalId">
+
+          <div class="form-group">
+            <label for="sName">Facility Name *</label>
+            <input type="text" id="sName" placeholder="e.g. Osmania General Hospital" required>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="sCategory">Service Category *</label>
+              <select id="sCategory" required>
+                <option value="hospital">Hospitals &amp; Medical Centers</option>
+                <option value="pharmacy">Pharmacies &amp; Medical Stores</option>
+                <option value="shelter">Emergency Relief Shelters</option>
+                <option value="food">Food Distribution &amp; Groceries</option>
+                <option value="water">Drinking Water Points</option>
+                <option value="other">Other Community Services</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="sStatus">Availability Status</label>
+              <select id="sStatus">
+                <option value="Available">Available</option>
+                <option value="Limited">Limited Capacity</option>
+                <option value="Full">Full / Near Capacity</option>
+                <option value="Closed">Temporarily Closed</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="sLat">Latitude * (-90 to 90)</label>
+              <input type="number" step="any" id="sLat" placeholder="17.3850" required>
+            </div>
+            <div class="form-group">
+              <label for="sLng">Longitude * (-180 to 180)</label>
+              <input type="number" step="any" id="sLng" placeholder="78.4867" required>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="sAddress">Street Address *</label>
+              <input type="text" id="sAddress" placeholder="Street, Door No." required>
+            </div>
+            <div class="form-group">
+              <label for="sLocality">Locality / Neighborhood</label>
+              <input type="text" id="sLocality" placeholder="e.g. Afzal Gunj">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="sPhone">Contact Phone Number</label>
+              <input type="text" id="sPhone" placeholder="+91 40 2460 0000">
+            </div>
+            <div class="form-group">
+              <label for="sHours">Operating Hours</label>
+              <input type="text" id="sHours" placeholder="24 Hours / 7 Days">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sVerification">Verification Status</label>
+            <select id="sVerification">
+              <option value="Verified">Verified Official Record</option>
+              <option value="Unverified">Unverified / Crowd Sourced</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="sDesc">Facility Description &amp; Capacity</label>
+            <textarea id="sDesc" rows="2" placeholder="e.g. 500 beds, ICU trauma facility, standby ambulance base..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeAdminModal('serviceModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Facility Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Risk Zone Modal -->
+  <div class="admin-modal-backdrop" id="riskZoneModal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h3 id="riskZoneModalTitle">Author Risk Zone</h3>
+        <button class="modal-close" onclick="window.closeAdminModal('riskZoneModal')">✕</button>
+      </div>
+      <form id="riskZoneForm">
+        <div class="modal-body">
+          <input type="hidden" id="riskZoneModalId">
+
+          <div class="form-group">
+            <label for="rzName">Risk Zone Name *</label>
+            <input type="text" id="rzName" placeholder="e.g. Musi River Basin Lowlands" required>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="rzType">Hazard Type *</label>
+              <select id="rzType" required>
+                <option value="Flood">Flood Inundation</option>
+                <option value="Disease">Vector / Disease Outbreak</option>
+                <option value="Composite Hazard">Composite Multi-Hazard</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="rzLevel">Risk Level *</label>
+              <select id="rzLevel" required>
+                <option value="High">High (Red Alert)</option>
+                <option value="Medium">Medium (Amber Warning)</option>
+                <option value="Low">Low (Safe / Monitored)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="rzScore">Hazard Score (0 - 100) *</label>
+              <input type="number" step="any" min="0" max="100" id="rzScore" value="75" required>
+            </div>
+            <div class="form-group">
+              <label for="rzRadius">Buffer Radius (km)</label>
+              <input type="number" step="any" id="rzRadius" value="2.0">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="rzLat">Center Latitude *</label>
+              <input type="number" step="any" id="rzLat" placeholder="17.3750" required>
+            </div>
+            <div class="form-group">
+              <label for="rzLng">Center Longitude *</label>
+              <input type="number" step="any" id="rzLng" placeholder="78.4800" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rzGeoJSON">GeoJSON Polygon Geometry (Optional)</label>
+            <textarea id="rzGeoJSON" rows="3" placeholder='{"type": "Polygon", "coordinates": [[[lng, lat], [lng, lat]...]]}' style="font-family:var(--font-mono); font-size:0.75rem;"></textarea>
+            <small style="color:#64748b;">Leave empty to automatically use the center coordinates and buffer radius.</small>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="rzSource">Attributed Data Source</label>
+              <input type="text" id="rzSource" value="State Hydrology &amp; Disaster Dept">
+            </div>
+            <div class="form-group">
+              <label for="rzPublished">Publication Status</label>
+              <select id="rzPublished">
+                <option value="1">Published (Visible on Public Map)</option>
+                <option value="0">Draft (Admin Only)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rzDesc">Risk Rationale &amp; Explanatory Description *</label>
+            <textarea id="rzDesc" rows="2" placeholder="Details regarding rainfall gauges, historic backwater levels, or vector clusters..." required></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeAdminModal('riskZoneModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Risk Zone</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Review Incident Modal -->
+  <div class="admin-modal-backdrop" id="incidentReviewModal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h3>Review Incident Report: <span id="incModalRef" style="color:#38bdf8;">--</span></h3>
+        <button class="modal-close" onclick="window.closeAdminModal('incidentReviewModal')">✕</button>
+      </div>
+      <form id="incidentReviewForm">
+        <div class="modal-body">
+          <input type="hidden" id="incModalId">
+
+          <div style="background:#060b18; padding:16px; border-radius:10px; border:1px solid rgba(120,200,255,0.1); margin-bottom:18px;">
+            <h4 id="incModalTitle" style="color:#fff; font-size:1.05rem; margin-bottom:6px;">--</h4>
+            <p id="incModalDesc" style="color:#94a3b8; font-size:0.86rem; margin-bottom:10px;">--</p>
+            <div style="font-size:0.78rem; color:#64748b;">
+              <b>Category:</b> <span id="incModalCategory">--</span> &bull;
+              <b>Address:</b> <span id="incModalAddress">--</span> &bull;
+              <b>Reporter (Private):</b> <span id="incModalReporter" style="color:#f87171;">--</span>
+            </div>
+            <div id="incPhotoContainer"></div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="incStatusSelect">Moderation Status *</label>
+              <select id="incStatusSelect" required>
+                <option value="Pending">Pending</option>
+                <option value="Under Review">Under Review</option>
+                <option value="Verified">Verified &amp; Actioned</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="incPrioritySelect">Priority Level</label>
+              <select id="incPrioritySelect">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="incAssignedInput">Assigned Dispatcher / Officer</label>
+              <input type="text" id="incAssignedInput" placeholder="Officer name or team">
+            </div>
+
+            <div class="form-group">
+              <label for="incPublicToggle">Show on Public Citizen Map</label>
+              <select id="incPublicToggle">
+                <option value="1">Yes (Verified Public Marker)</option>
+                <option value="0">No (Internal Only)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="incNotesInput">Internal Notes &amp; Dispatch Log</label>
+            <textarea id="incNotesInput" rows="3" placeholder="Dispatched rescue team #2; dewatering pump deployed..."></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeAdminModal('incidentReviewModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Status &amp; Save Log</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit User Modal -->
+  <div class="admin-modal-backdrop" id="userModal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h3 id="userModalTitle">Administrative Account</h3>
+        <button class="modal-close" onclick="window.closeAdminModal('userModal')">✕</button>
+      </div>
+      <form id="userForm">
+        <div class="modal-body">
+          <input type="hidden" id="userModalId">
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="uUsername">Username *</label>
+              <input type="text" id="uUsername" required>
+            </div>
+            <div class="form-group">
+              <label for="uFullName">Full Name *</label>
+              <input type="text" id="uFullName" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="uEmail">Email Address *</label>
+            <input type="email" id="uEmail" required>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label for="uRole">Role *</label>
+              <select id="uRole" required>
+                <option value="Data Manager">Data Manager (CRUD Services &amp; Risk Zones)</option>
+                <option value="Admin">Admin (Users &amp; Moderation)</option>
+                <option value="Super Admin">Super Admin (Universal Access)</option>
+                <option value="Read-Only Viewer">Read-Only Viewer (Auditor)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="uStatus">Account Status</label>
+              <select id="uStatus">
+                <option value="active">Active</option>
+                <option value="inactive">Inactive / Suspended</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="userPasswordGroup">
+            <label for="uPassword">Password</label>
+            <input type="password" id="uPassword" placeholder="Minimum 6 characters">
+            <small id="userPasswordHint" style="color:#64748b; font-size:0.75rem;"></small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeAdminModal('userModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CSV Import Modal -->
+  <div class="admin-modal-backdrop" id="csvImportModal">
+    <div class="admin-modal">
+      <div class="modal-header">
+        <h3>Import Essential Services via CSV</h3>
+        <button class="modal-close" onclick="window.closeAdminModal('csvImportModal')">✕</button>
+      </div>
+      <form id="csvImportForm">
+        <div class="modal-body">
+          <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:12px;">
+            Paste comma-separated rows. Required header columns: <code>name</code>, <code>category</code>, <code>latitude</code>, <code>longitude</code>, <code>address</code>, <code>phone</code>.
+          </p>
+
+          <div class="form-group">
+            <label for="csvTextInput">CSV Data Text</label>
+            <textarea id="csvTextInput" rows="8" placeholder="name,category,latitude,longitude,address,phone&#10;Apollo Specialty Hospital,hospital,17.4156,78.4128,Jubilee Hills,+91 40 2360 7777&#10;MedPlus 24/7 Pharmacy,pharmacy,17.3912,78.4820,Abids,+91 40 2320 1199" style="font-family:var(--font-mono); font-size:0.75rem;" required></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.closeAdminModal('csvImportModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Parse &amp; Import Records</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Hub -->
+  <div id="adminToastHub"></div>
+
+  <!-- Admin Application Logic -->
+  <script src="/admin/js/adminApp.js"></script>
+</body>
+</html>
